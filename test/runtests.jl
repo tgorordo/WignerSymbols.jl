@@ -207,3 +207,23 @@ end
         end
     end
 end
+
+@threads for i = 1:N
+    @testset "wigner9j: relation to sum over 6j products, thread $i" begin
+        for k = 1:10_000
+            @testset let (j1, j2, j3, j4, j5, j6, j7, j8, j9) = rand(smalljlist, 9)
+                @test wigner9j(j1, j2, j3, 
+                           j4, j5, j6, 
+                           j7, j8, j9) ≈ sum(largejlist) do x # lazy choice for range of this sum, but good enough
+                                            (iseven(2x) ? (2x + 1) : -(2x + 1)) *
+                                            wigner6j(j1, j4, j7,
+                                                     j8, j9, x ) *
+                                            wigner6j(j2, j5, j8,
+                                                     j4, x , j6) *
+                                            wigner6j(j3, j6, j9,
+                                                     x , j1, j2)
+                               end
+            end
+        end
+    end
+end
