@@ -285,8 +285,8 @@ function _wigner9j(T::Type{<:Real}, j₁::HalfInteger, j₂::HalfInteger, j₃::
     # dictionary lookup, check all 72 permutations 
     k = [j₁ j₂ j₃; j₄ j₅ j₆; j₇ j₈ j₉]
     for p in _perms9j
-        kk = tuple(reshape(k[p...], 9))
-        kkT = tuple(reshape(transpose(k[p...]), 9))
+        kk = Tuple(reshape(k[p...], 9))
+        kkT = Tuple(reshape(transpose(k[p...]), 9))
         if haskey(Wigner9j, kk)
             r, s = Wigner9j[kk]
             return _convert(T, s) * convert(T, signedroot(r))
