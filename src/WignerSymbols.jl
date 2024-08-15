@@ -6,7 +6,6 @@ using RationalRoots
 using LRUCache
 const RRBig = RationalRoot{BigInt}
 import RationalRoots: _convert
-using Combinatorics: permutations
 
 include("growinglist.jl")
 include("bigint.jl") # additional GMP BigInt functionality not wrapped in Base.GMP.MPZ
@@ -270,8 +269,19 @@ function wigner9j(T::Type{<:Real}, j₁, j₂, j₃, j₄, j₅, j₆, j₇, j�
     return _wigner9j(T, HalfInteger.((j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉))...)
 end
 
-const _perms9j = [(i, j) for i in permutations([1, 2, 3]), 
-                       j in permutations([1, 2, 3])]
+const _perms9j = [([1, 2, 3], [1, 2, 3]) ([1, 2, 3], [1, 3, 2]) ([1, 2, 3], [2, 1, 3]) ([1, 2, 3], [2, 3, 1]) ([1, 2, 3], [3, 1, 2]) ([1, 2, 3], [3, 2, 1]);
+                  ([1, 3, 2], [1, 2, 3]) ([1, 3, 2], [1, 3, 2]) ([1, 3, 2], [2, 1, 3]) ([1, 3, 2], [2, 3, 1]) ([1, 3, 2], [3, 1, 2]) ([1, 3, 2], [3, 2, 1]);
+                  ([2, 1, 3], [1, 2, 3]) ([2, 1, 3], [1, 3, 2]) ([2, 1, 3], [2, 1, 3]) ([2, 1, 3], [2, 3, 1]) ([2, 1, 3], [3, 1, 2]) ([2, 1, 3], [3, 2, 1]);
+                  ([2, 3, 1], [1, 2, 3]) ([2, 3, 1], [1, 3, 2]) ([2, 3, 1], [2, 1, 3]) ([2, 3, 1], [2, 3, 1]) ([2, 3, 1], [3, 1, 2]) ([2, 3, 1], [3, 2, 1]);
+                  ([3, 1, 2], [1, 2, 3]) ([3, 1, 2], [1, 3, 2]) ([3, 1, 2], [2, 1, 3]) ([3, 1, 2], [2, 3, 1]) ([3, 1, 2], [3, 1, 2]) ([3, 1, 2], [3, 2, 1]);
+                  ([3, 2, 1], [1, 2, 3]) ([3, 2, 1], [1, 3, 2]) ([3, 2, 1], [2, 1, 3]) ([3, 2, 1], [2, 3, 1]) ([3, 2, 1], [3, 1, 2]) ([3, 2, 1], [3, 2, 1])]
+
+const _signs9j = [1 -1 -1 1 1 -1;
+                  -1 1 1 -1 -1 1;
+                  -1 1 1 -1 -1 1;
+                  1 -1 -1 1 1 -1;
+                  1 -1 -1 1 1 -1;
+                  -1 1 1 -1 -1 1]
 
 function _wigner9j(T::Type{<:Real}, j₁::HalfInteger, j₂::HalfInteger, j₃::HalfInteger, 
                                     j₄::HalfInteger, j₅::HalfInteger, j₆::HalfInteger,
@@ -284,15 +294,15 @@ function _wigner9j(T::Type{<:Real}, j₁::HalfInteger, j₂::HalfInteger, j₃::
    
     # dictionary lookup, check all 72 permutations 
     k = [j₁ j₂ j₃; j₄ j₅ j₆; j₇ j₈ j₉]
-    for p in _perms9j
+    for (p, m) in zip(_perms9j, _signs9j)
         kk = Tuple(reshape(k[p...], 9))
         kkT = Tuple(reshape(transpose(k[p...]), 9))
         if haskey(Wigner9j, kk)
             r, s = Wigner9j[kk]
-            return _convert(T, s) * convert(T, signedroot(r))
+            return m * _convert(T, s) * convert(T, signedroot(r))
         elseif haskey(Wigner9j, kkT)
             r, s = Wigner9j[kkT]
-            return _convert(T, s) * convert(T, signedroot(r)) 
+            return m * _convert(T, s) * convert(T, signedroot(r)) 
         end
     end
 
