@@ -407,9 +407,7 @@ end
 
 function primebinomial(n::BigInt, k::BigInt)
     num = copy(primefactorial(n))
-    den = copy(primefactorial(k))
-    den = mul!(den, primefactorial(n - k))
-    res = divexact!(num, den)
-    return res
+    divexact!(num, primefactorial(k))
+    return divexact!(num, primefactorial(n-k))
 end
 
