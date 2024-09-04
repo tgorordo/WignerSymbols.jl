@@ -454,7 +454,7 @@ function compute9jseries(a, b, c, d, e, f, g, h, j)
     I2 = min(h + d, b + f, a + j)
     krange = I1:I2
  
-    sum(krange) do k
+    return sum(krange) do k
         p = iseven(2k) ? big(2k + 1) : -big(2k + 1)
 
         b₁ = let (m₁, m₂, m₃, m₄, m₅, m₆) = (a, b, c, f, j, k)     
