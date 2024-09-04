@@ -494,7 +494,6 @@ function compute9jseries(a, b, c, d, e, f, g, h, j)
     end
 end
 
-export wei9jbracket
 # Wei square bracket terms appearing the 9j series
 function wei9jbracket(α₁::BigInt, α₂::BigInt, α₃::BigInt, β₁::BigInt, β₂::BigInt, β₃::BigInt, β₀::BigInt) 
     p = max(β₁, β₂, β₃, β₀)
