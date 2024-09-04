@@ -75,7 +75,7 @@ Largely based on reading the paper (but not the code):
 with some additional modifications to further improve efficiency for large `j` (angular
 momenta quantum numbers).
 
-In particular, 3j and 6j symbols are computed exactly, in the format `√(r) * s` where `r`
+In particular, 3j, 6j, and 9j symbols are computed exactly, in the format `√(r) * s` where `r`
 and `s` are exactly computed as `Rational{BigInt}`, using an intermediate representation
 based on prime number factorization. This exact representation is captured by the
 `RationalRoot` type. For further calculations, these values probably need to be converted
