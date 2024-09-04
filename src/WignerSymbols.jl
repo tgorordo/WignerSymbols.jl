@@ -316,14 +316,28 @@ function _wigner9j(T::Type{<:Real}, j₁::HalfInteger, j₂::HalfInteger, j₃::
 
     snum, rnum = splitsquare(n₁ * n₂ * n₃ * n₄ * n₅ * n₆)
     sden, rden = splitsquare(d₁ * d₂ * d₃ * d₄ * d₅ * d₆)
-    snum, sden = divgcd!(snum, sden)
+    
     rnum, rden = divgcd!(rnum, rden) 
-    s = Base.unsafe_rational(convert(BigInt, snum), convert(BigInt, sden))
-    r = Base.unsafe_rational(convert(BigInt, rnum), convert(BigInt, rden))
-    s *= compute9jseries(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)
+    rr = Base.unsafe_rational(convert(BigInt, rnum), convert(BigInt, rden)) 
 
-    Wigner9j[(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)] = (r, s)
-    return _convert(T, s) * convert(T, signedroot(r))
+    snum, sden = divgcd!(snum, sden)
+    snum2 = compute9jseries(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)
+    for n = 1:length(sden.powers)
+        p = bigprime(n)
+        while sden.powers[n] > 0
+            q, r = divrem(snum2, p)
+            if iszero(r)
+                snum2 = q
+                sden.powers[n] -= 1
+            else
+                break
+            end
+        end
+    end
+    s = Base.unsafe_rational(convert(BigInt, snum)*snum2, convert(BigInt, sden))
+
+    Wigner9j[(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)] = (rr, s)
+    return _convert(T, s) * convert(T, signedroot(rr))
 end
 
 # COMPUTATIONAL ROUTINES
@@ -454,7 +468,7 @@ function compute9jseries(a, b, c, d, e, f, g, h, j)
     I2 = min(h + d, b + f, a + j)
     krange = I1:I2
  
-    return sum(krange) do k
+    s = sum(krange) do k
         p = iseven(2k) ? big(2k + 1) : -big(2k + 1)
 
         b₁ = let (m₁, m₂, m₃, m₄, m₅, m₆) = (a, b, c, f, j, k)     
@@ -492,6 +506,8 @@ function compute9jseries(a, b, c, d, e, f, g, h, j)
         
         p * b₁ * b₂ * b₃
     end
+
+    return convert(BigInt, s)
 end
 
 # Wei square bracket terms appearing the 9j series
