@@ -208,21 +208,25 @@ end
     end
 end
 
+
 @threads for i = 1:N
     @testset "wigner9j: relation to sum over 6j products, thread $i" begin
         for k = 1:10_000
-            let (j1, j2, j3, j4, j5, j6, j7, j8, j9) = rand(smalljlist, 9)
-                @test wigner9j(j1, j2, j3, 
-                           j4, j5, j6, 
-                           j7, j8, j9) ≈ sum(largejlist) do x # lazy choice for range of this sum, but good enough
-                                            (iseven(2x) ? (2x + 1) : -(2x + 1)) *
-                                            wigner6j(j1, j4, j7,
-                                                     j8, j9, x ) *
-                                            wigner6j(j2, j5, j8,
-                                                     j4, x , j6) *
-                                            wigner6j(j3, j6, j9,
-                                                     x , j1, j2)
-                               end
+            debug = false
+            js = rand(smalljlist, 9)
+
+            debug |= !(@test(wigner9j(js...) ≈ sum(largejlist) do x # lazy choice for range of this sum, but good enough
+                                                (iseven(2x) ? (2x + 1) : -(2x + 1)) *
+                                                    wigner6j(js[1], js[4], js[7],
+                                                        js[8], js[9], x ) *
+                                                    wigner6j(js[2], js[5], js[8],
+                                                        js[4], x , js[6]) *
+                                                    wigner6j(js[3], js[6], js[9],
+                                                        x , js[1], js[2])
+                                                end) isa Test.Pass)
+
+            if debug
+                @warn "Failed on input" js
             end
         end
     end

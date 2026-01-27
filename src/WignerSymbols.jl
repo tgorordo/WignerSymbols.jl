@@ -269,19 +269,6 @@ function wigner9j(T::Type{<:Real}, j₁, j₂, j₃, j₄, j₅, j₆, j₇, j�
     return _wigner9j(T, HalfInteger.((j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉))...)
 end
 
-const _perms9j = [([1, 2, 3], [1, 2, 3]) ([1, 2, 3], [1, 3, 2]) ([1, 2, 3], [2, 1, 3]) ([1, 2, 3], [2, 3, 1]) ([1, 2, 3], [3, 1, 2]) ([1, 2, 3], [3, 2, 1]);
-                  ([1, 3, 2], [1, 2, 3]) ([1, 3, 2], [1, 3, 2]) ([1, 3, 2], [2, 1, 3]) ([1, 3, 2], [2, 3, 1]) ([1, 3, 2], [3, 1, 2]) ([1, 3, 2], [3, 2, 1]);
-                  ([2, 1, 3], [1, 2, 3]) ([2, 1, 3], [1, 3, 2]) ([2, 1, 3], [2, 1, 3]) ([2, 1, 3], [2, 3, 1]) ([2, 1, 3], [3, 1, 2]) ([2, 1, 3], [3, 2, 1]);
-                  ([2, 3, 1], [1, 2, 3]) ([2, 3, 1], [1, 3, 2]) ([2, 3, 1], [2, 1, 3]) ([2, 3, 1], [2, 3, 1]) ([2, 3, 1], [3, 1, 2]) ([2, 3, 1], [3, 2, 1]);
-                  ([3, 1, 2], [1, 2, 3]) ([3, 1, 2], [1, 3, 2]) ([3, 1, 2], [2, 1, 3]) ([3, 1, 2], [2, 3, 1]) ([3, 1, 2], [3, 1, 2]) ([3, 1, 2], [3, 2, 1]);
-                  ([3, 2, 1], [1, 2, 3]) ([3, 2, 1], [1, 3, 2]) ([3, 2, 1], [2, 1, 3]) ([3, 2, 1], [2, 3, 1]) ([3, 2, 1], [3, 1, 2]) ([3, 2, 1], [3, 2, 1])]
-
-const _signs9j = [1 -1 -1 1 1 -1;
-                  -1 1 1 -1 -1 1;
-                  -1 1 1 -1 -1 1;
-                  1 -1 -1 1 1 -1;
-                  1 -1 -1 1 1 -1;
-                  -1 1 1 -1 -1 1]
 
 function _wigner9j(T::Type{<:Real}, j₁::HalfInteger, j₂::HalfInteger, j₃::HalfInteger, 
                                     j₄::HalfInteger, j₅::HalfInteger, j₆::HalfInteger,
@@ -292,27 +279,23 @@ function _wigner9j(T::Type{<:Real}, j₁::HalfInteger, j₂::HalfInteger, j₃::
         return zero(T)
     end
    
-    # dictionary lookup, check all 72 permutations 
-    k = [j₁ j₂ j₃; j₄ j₅ j₆; j₇ j₈ j₉]
-    for (p, m) in zip(_perms9j, _signs9j)
-        kk = Tuple(reshape(k[p...], 9))
-        kkT = Tuple(reshape(transpose(k[p...]), 9))
-        if haskey(Wigner9j, kk)
-            r, s = Wigner9j[kk]
-            return m * _convert(T, s) * convert(T, signedroot(r))
-        elseif haskey(Wigner9j, kkT)
-            r, s = Wigner9j[kkT]
-            return m * _convert(T, s) * convert(T, signedroot(r)) 
-        end
+    # dictionary lookup by regge symmetries
+    k, m = reorder9j(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)
+    if haskey(Wigner9j, k)
+        r, s = Wigner9j[k]
+        return m * _convert(T, s) * convert(T, signedroot(r))
     end
 
+    # canonicalized entries
+    j₁c, j₂c, j₃c, j₄c, j₅c, j₆c, j₇c, j₈c, j₉c = k
+
     # order irrelevant: product remains the same
-    n₁, d₁ = Δ²(j₁, j₂, j₃)
-    n₂, d₂ = Δ²(j₄, j₅, j₆)
-    n₃, d₃ = Δ²(j₇, j₈, j₉)
-    n₄, d₄ = Δ²(j₁, j₄, j₇)
-    n₅, d₅ = Δ²(j₂, j₅, j₈)
-    n₆, d₆ = Δ²(j₃, j₆, j₉) 
+    n₁, d₁ = Δ²(j₁c, j₂c, j₃c)
+    n₂, d₂ = Δ²(j₄c, j₅c, j₆c)
+    n₃, d₃ = Δ²(j₇c, j₈c, j₉c)
+    n₄, d₄ = Δ²(j₁c, j₄c, j₇c)
+    n₅, d₅ = Δ²(j₂c, j₅c, j₈c)
+    n₆, d₆ = Δ²(j₃c, j₆c, j₉c) 
 
     snum, rnum = splitsquare(n₁ * n₂ * n₃ * n₄ * n₅ * n₆)
     sden, rden = splitsquare(d₁ * d₂ * d₃ * d₄ * d₅ * d₆)
@@ -321,7 +304,7 @@ function _wigner9j(T::Type{<:Real}, j₁::HalfInteger, j₂::HalfInteger, j₃::
     rr = Base.unsafe_rational(convert(BigInt, rnum), convert(BigInt, rden)) 
 
     snum, sden = divgcd!(snum, sden)
-    snum2 = compute9jseries(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)
+    snum2 = compute9jseries(j₁c, j₂c, j₃c, j₄c, j₅c, j₆c, j₇c, j₈c, j₉c)
     for n = 1:length(sden.powers)
         p = bigprime(n)
         while sden.powers[n] > 0
@@ -336,8 +319,8 @@ function _wigner9j(T::Type{<:Real}, j₁::HalfInteger, j₂::HalfInteger, j₃::
     end
     s = Base.unsafe_rational(convert(BigInt, snum)*snum2, convert(BigInt, sden))
 
-    Wigner9j[(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)] = (rr, s)
-    return _convert(T, s) * convert(T, signedroot(rr))
+    Wigner9j[(j₁c, j₂c, j₃c, j₄c, j₅c, j₆c, j₇c, j₈c, j₉c)] = (rr, s)
+    return m * _convert(T, s) * convert(T, signedroot(rr))
 end
 
 # COMPUTATIONAL ROUTINES
@@ -390,6 +373,49 @@ function reorder6j(β₁, β₂, β₃, α₁, α₂, α₃, α₄)
     else
         return (β₁, β₂, β₃, α₁, α₂, α₃, α₄)
     end
+end
+
+const _perms = [[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]
+const _perms9j = [(r, c) for r in _perms, c in _perms]
+_permparity(p) = count(i < j && p[i] > p[j] for i in 1:length(p), j in 1:length(p)) % 2
+
+#const _perms9j = [([1, 2, 3], [1, 2, 3]) ([1, 2, 3], [1, 3, 2]) ([1, 2, 3], [2, 1, 3]) ([1, 2, 3], [2, 3, 1]) ([1, 2, 3], [3, 1, 2]) ([1, 2, 3], [3, 2, 1]);
+#                  ([1, 3, 2], [1, 2, 3]) ([1, 3, 2], [1, 3, 2]) ([1, 3, 2], [2, 1, 3]) ([1, 3, 2], [2, 3, 1]) ([1, 3, 2], [3, 1, 2]) ([1, 3, 2], [3, 2, 1]);
+#                  ([2, 1, 3], [1, 2, 3]) ([2, 1, 3], [1, 3, 2]) ([2, 1, 3], [2, 1, 3]) ([2, 1, 3], [2, 3, 1]) ([2, 1, 3], [3, 1, 2]) ([2, 1, 3], [3, 2, 1]);
+#                  ([2, 3, 1], [1, 2, 3]) ([2, 3, 1], [1, 3, 2]) ([2, 3, 1], [2, 1, 3]) ([2, 3, 1], [2, 3, 1]) ([2, 3, 1], [3, 1, 2]) ([2, 3, 1], [3, 2, 1]);
+#                  ([3, 1, 2], [1, 2, 3]) ([3, 1, 2], [1, 3, 2]) ([3, 1, 2], [2, 1, 3]) ([3, 1, 2], [2, 3, 1]) ([3, 1, 2], [3, 1, 2]) ([3, 1, 2], [3, 2, 1]);
+#                  ([3, 2, 1], [1, 2, 3]) ([3, 2, 1], [1, 3, 2]) ([3, 2, 1], [2, 1, 3]) ([3, 2, 1], [2, 3, 1]) ([3, 2, 1], [3, 1, 2]) ([3, 2, 1], [3, 2, 1])]
+
+# reorder parameters determining the 9j symbol to canonical (lexicographic) order with regge factor
+function reorder9j(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)
+
+    J = [j₁ j₂ j₃; j₄ j₅ j₆; j₇ j₈ j₉]
+
+    k = (j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)
+    m = 1
+
+    rg = (-1)^sum(k)
+
+    for p in _perms9j
+        JJ = J[p...]
+        kk = Tuple(reshape(JJ, 9))
+        kkT = Tuple(reshape(JJ', 9))
+
+        s = iseven(_permparity(p[1]) + _permparity(p[2])) ? 1 : rg
+
+        if kk < kkT
+            if kk < k
+                k = kk
+                m = s
+            end
+        else # kk > kkT
+            if kkT < k                
+                k = kkT
+                m = s
+            end
+        end        
+    end
+    return k, m
 end
 
 # compute the sum appearing in the 3j symbol
