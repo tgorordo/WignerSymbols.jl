@@ -286,7 +286,7 @@ function _wigner9j(T::Type{<:Real}, j₁::HalfInteger, j₂::HalfInteger, j₃::
         return m * _convert(T, s) * convert(T, signedroot(r))
     end
 
-    # canonicalized entries
+    # canonicalized entries (m is a restoring sign factor)
     j₁c, j₂c, j₃c, j₄c, j₅c, j₆c, j₇c, j₈c, j₉c = k
 
     # order irrelevant: product remains the same

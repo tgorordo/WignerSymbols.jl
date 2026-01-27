@@ -216,7 +216,7 @@ end
             js = rand(smalljlist, 9)
 
             debug |= !(@test(wigner9j(js...) ≈ sum(largejlist) do x # lazy choice for range of this sum, but good enough
-                                                (iseven(2x) ? (2x + 1) : -(2x + 1)) *
+                                                (iseven(Int(2x)) ? (2x + 1) : -(2x + 1)) *
                                                     wigner6j(js[1], js[4], js[7],
                                                         js[8], js[9], x ) *
                                                     wigner6j(js[2], js[5], js[8],
