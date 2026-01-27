@@ -495,7 +495,7 @@ function compute9jseries(a, b, c, d, e, f, g, h, j)
     krange = I1:I2
  
     s = sum(krange) do k
-        p = iseven(Int(2k)) ? big(2k + 1) : -big(2k + 1)
+        p = iseven(BigInt(2k)) ? big(2k + 1) : -big(2k + 1)
 
         b₁ = let (m₁, m₂, m₃, m₄, m₅, m₆) = (a, b, c, f, j, k)     
             α₁ = convert(BigInt, m₁ + m₅ - m₆)
